@@ -63,4 +63,3 @@ def source_dataset():
     return asset_list
 
 
-source_dataset()
