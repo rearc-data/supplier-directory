@@ -82,7 +82,7 @@ How can I contribute?
 If you have feedback specific to the ADX product featured in this
 repository, the best way to contact us would be through [opening a
 GitHub
-issue](https://github.com/rearc-data/ordering-referring-medicare/issues)
+issue](https://github.com/rearc-data/supplier-directory/issues)
 in this repository. Before opening an issue please review the existing
 suggestions to see if your idea is already there. If already present,
 please comment on the existing issue instead of making a new one.
@@ -120,3 +120,4 @@ Additional Resources
 -   Rearc Data Email: data@rearc.io
 -   [Rearc AWS Marketplace
     Profile](https://aws.amazon.com/marketplace/seller-profile?id=a8a86da2-b2d1-4fae-992d-03494e90590b)
+
