@@ -5,6 +5,7 @@
 Supplier Directory Data | Medicare
 =========================
 You can subscribe to the AWS Data Exchange product utilizing the automation featured in this repository by visiting 
+[https://aws.amazon.com/marketplace/pp/prodview-gkia5vzj7cx4e](https://aws.amazon.com/marketplace/pp/prodview-gkia5vzj7cx4e)
 
 Main Overview
 -------------
