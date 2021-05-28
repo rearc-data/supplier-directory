@@ -3,9 +3,9 @@ from multiprocessing.dummy import Pool
 from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
 import boto3
-from extract_helper import *
+import rearc_data_utils
+from pre_processing import extract_helper as eh
 import numpy as np
-
 
 def data_to_s3(frmt=None):
     # throws error occured if there was a problem accessing data
@@ -23,7 +23,7 @@ def data_to_s3(frmt=None):
     # source_dataset_url = 'https://data.medicare.gov/api/views/ct36-nrcq/rows'
 
     try:
-        df = source_unknown_filetype(source_dataset_url)
+        df = eh.source_unknown_filetype(source_dataset_url)
         # response = urlopen(source_dataset_url) # + frmt)
 
     except HTTPError as e:
@@ -33,7 +33,7 @@ def data_to_s3(frmt=None):
         raise Exception('URLError: ', e.reason, frmt)
 
     else:
-        df = flatten_list(df,["supplieslist","specialitieslist"],"Product Category Name","|")
+        df = eh.flatten_list(df,["supplieslist","specialitieslist"],"Product Category Name","|")
 
         df['PhoneNumber'] = df['telephonenumber'].astype(str).apply(
             lambda x: np.where((len(x) >= 10) & set(list(x)).issubset(list('.0123456789')),
@@ -46,28 +46,7 @@ def data_to_s3(frmt=None):
                             )
         df['practicezip5code'] = df['zip_string9'].str[:5]
 
-        df = transform_columns(df,
-                               [
-                                   #"Competitive Bid Service Area ID",
-                                   #"Competitive Bid Service Area Name",
-                                   "businessname", #OK
-                                   "practicename", #OK
-                                   "practiceaddress1", #OK
-                                   "practiceaddress2", #OK
-                                   "practicecity", #OK
-                                   "practicestate", #OK
-                                   "practicezip5code", #TODO make Zip 5
-                                   "zip_string9", #OK
-                                   "PhoneNumber", #telephonenumber", #OK
-                                   #"telephonenumber", #toll free number not available, deleted
-                                   "Product Category Name", #OK
-                                   "is_contracted_for_cba", #OK
-                                   ########## Debug below
-                                   #"practicezip9code",
-                                   #"zip_string",
-
-                               ],
-                               [
+        target =                                [
                                    #"Competitive Bid Service Area ID",
                                    #"Competitive Bid Service Area Name",
                                    "Company Name",
@@ -86,17 +65,35 @@ def data_to_s3(frmt=None):
                                    #"practicezip9code",
                                    #"zip_string",
                                ]
-                               )
+        source =                               [
+                                   #"Competitive Bid Service Area ID",
+                                   #"Competitive Bid Service Area Name",
+                                   "businessname", #OK
+                                   "practicename", #OK
+                                   "practiceaddress1", #OK
+                                   "practiceaddress2", #OK
+                                   "practicecity", #OK
+                                   "practicestate", #OK
+                                   "practicezip5code", #TODO make Zip 5
+                                   "zip_string9", #OK
+                                   "PhoneNumber", #telephonenumber", #OK
+                                   #"telephonenumber", #toll free number not available, deleted
+                                   "Product Category Name", #OK
+                                   "is_contracted_for_cba", #OK
+                                   ########## Debug below
+                                   #"practicezip9code",
+                                   #"zip_string",
+
+                               ]
+
+        df = eh.transform_columns(df, source, target)
 
         frmt = ".csv"
         data_set_name = os.environ['DATA_SET_NAME']
 
         filename = data_set_name + frmt
         file_location = '/tmp/' + filename
-
-
         df.to_csv(file_location, index=False, sep=',')
-
 
         #
         #with open(file_location, 'wb') as f:
@@ -109,12 +106,27 @@ def data_to_s3(frmt=None):
         s3 = boto3.client('s3')
 
         s3.upload_file(file_location, s3_bucket, new_s3_key + filename)
+        df = eh.source_unknown_filetype(file_location)
+
+        os.remove(file_location)
 
         print('Uploaded: ' + filename)
 
-        # deletes to preserve limited space in aws lamdba
-        os.remove(file_location)
 
+        filename = data_set_name + '.json'
+        file_location = '/tmp/' + filename
+        # df = df.set_index(target)
+        # df.reset_index(drop=True, inplace=True)
+
+        print(df)
+        #df.to_json(file_location)
+        #s3.upload_file(file_location, s3_bucket, new_s3_key + filename)
+        #print('Uploaded: ' + filename)
+
+        # deletes to preserve limited space in aws lamdba
+        #os.remove(file_location)
+
+        # TODO adjust asset_list with new code
         # dicts to be used to add assets to the dataset revision
         return {'Bucket': s3_bucket, 'Key': new_s3_key + filename}
 
