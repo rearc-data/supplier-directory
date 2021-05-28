@@ -1,0 +1,15 @@
+{
+  "columns" : [
+        "Language",
+        "Number of Speakers",
+        "Margin of Error",
+        "Speak English less than very well",
+        "Margin of Error"
+  ],
+  "label_column": "location",
+  "sheet_name" : null,
+  "ignore_sheet" : "Contents",
+  "imposter" : false,
+  "skip_header" : 5,
+  "skip_footer" : 11
+}
