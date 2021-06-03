@@ -10,6 +10,9 @@ import numpy as np
 import json
 from boto3.s3.transfer import TransferConfig
 
+import logging
+logger = logging.getLogger()
+
 def upload_file(frmt_list):
     s3_uploads = []
     asset_list = []
@@ -68,14 +71,18 @@ def data_to_s3(frmt=None):
 
     # source_dataset_url = 'https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/ct36-nrcq'
 
-    source_dataset_url = "https://data.cms.gov/provider-data/sites/default/files/resources/598b68bde4da1561a570cb057a4176dd_1621267521/Medical-Equipment-Suppliers.csv"
+    source_dataset_url = "https://data.cms.gov/provider-data/sites/default/files/resources/598b68bde4da1561a570cb057a4176dd_1622563521/Medical-Equipment-Suppliers.csv"
 
+    logger.info("URL used: " + source_dataset_url)
 
     # Old:
     # source_dataset_url = 'https://data.medicare.gov/api/views/ct36-nrcq/rows'
 
     try:
         df = eh.source_unknown_filetype(source_dataset_url)
+        isempty = df.empty
+        if isempty:
+            logger.warning("Data Frame is empty: ")
         # response = urlopen(source_dataset_url) # + frmt)
 
     except HTTPError as e:
@@ -85,18 +92,18 @@ def data_to_s3(frmt=None):
         raise Exception('URLError: ', e.reason, frmt)
 
     else:
-        df = eh.flatten_list(df,["supplieslist","specialitieslist"],"Product Category Name","|")
+        df = eh.flatten_list(df,["supplieslist","specialitieslist","providertypelist"],"Product Category Name","|")
 
         df['PhoneNumber'] = df['telephonenumber'].astype(str).apply(
             lambda x: np.where((len(x) >= 10) & set(list(x)).issubset(list('.0123456789')),
                                '(' + x[:3] + ')' + x[3:6] + '-' + x[6:10],
                                'Phone number not in record'))
         df['zip_string'] = df['practicezip9code'].astype(str)
-        df['zip_string9'] = df['zip_string'].where(
-                                df['zip_string'].str.len() != 9,
-                                "0" + df['zip_string']
-                            )
-        df['practicezip5code'] = df['zip_string9'].str[:5]
+        df['zip_string9'] = df['zip_string'] #.where(
+                                #df['zip_string'].str.len() != 9,
+                                #"0" + df['zip_string']
+                            #)
+        df['practicezip5code'] = df['zip_string9'] #.str[:5]
 
         target =                                [
                                    #"Competitive Bid Service Area ID",

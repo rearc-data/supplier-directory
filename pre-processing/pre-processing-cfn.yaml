@@ -1,4 +1,5 @@
-AWSTemplateFormatVersion: "2010-09-09"
+---
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: "AWS::Serverless-2016-10-31"
 # CloudFormation template in YAML to setup an automated process to update revisions to datasets in AWS Data Exchange
 Parameters:
@@ -19,48 +20,57 @@ Parameters:
     Type: String
     Default: us-east-1
     Description: AWS Region for AWS Data Exchange
+  SourceURL:
+    Type: String
+    Description: Source URL for Data File Download (only single file datasets)
+  ScheduleCron:
+    Type: String
+    Description: Cron Expression for the Lambda Run Schedule
 
 Resources:
-  # Create an IAM role for Lambda to use
+# Create an IAM role for Lambda to use
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
           - Action:
-              - sts:AssumeRole
+            - sts:AssumeRole
             Effect: Allow
             Principal:
               Service:
-                - lambda.amazonaws.com
+              - lambda.amazonaws.com
         Version: 2012-10-17
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSLambdaExecute
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::796406704065:policy/AWSDataExchangeService
         - arn:aws:iam::aws:policy/AWSMarketplaceSellerFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
       Path: /
 
-  # Create a Lambda function that will update daily revisions to AWS Data Exchange dataset
+# Create a Lambda function that will update daily revisions to AWS Data Exchange dataset
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Join
-        - ""
-        - - "source-for-"
-          - !Ref DataSetName
+      FunctionName:
+        !Join
+          - ''
+          - - 'source-for-'
+            - !Ref DataSetName
       Description: "Source revision updates to AWS Data Exchange data set"
       Runtime: "python3.7"
       Code:
         S3Bucket:
           Fn::Sub: ${S3Bucket}
-        S3Key: !Join
-          - ""
-          - - Fn::Sub: ${DataSetName}
-            - "/automation/pre-processing-code.zip"
+        S3Key:
+          !Join
+            - ''
+            - - Fn::Sub: ${DataSetName}
+              - '/automation/pre-processing-code.zip'
       Handler: "lambda_function.lambda_handler"
-      MemorySize: 1024
-      Timeout: 600
+      MemorySize: 8192 # This lambda processes a lot of data
+      Timeout: 900
       Role:
         Fn::GetAtt:
           - LambdaRole
@@ -77,15 +87,18 @@ Resources:
             Fn::Sub: ${ProductId}
           REGION:
             Fn::Sub: ${Region}
+          SOURCE_URL:
+            Fn::Sub: ${SourceURL}
 
   ScheduledRule:
     Type: AWS::Events::Rule
     Properties:
       Description: "ScheduledRule"
-      ScheduleExpression: "cron(0 6 ? * 2 *)"
+      ScheduleExpression: !Sub ${ScheduleCron}
       State: "ENABLED"
       Targets:
-        - Arn:
+        -
+          Arn:
             Fn::GetAtt:
               - "LambdaFunction"
               - "Arn"
@@ -102,6 +115,22 @@ Resources:
         Fn::GetAtt:
           - "ScheduledRule"
           - "Arn"
+
+  version:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref "LambdaFunction"
+
+  asyncconfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Properties:
+      DestinationConfig:
+          OnFailure:
+            Destination: arn:aws:sns:us-east-1:796406704065:adx-lambda-error
+      FunctionName: !Ref "LambdaFunction"
+      MaximumEventAgeInSeconds: 300
+      MaximumRetryAttempts: 2
+      Qualifier: $LATEST
 
 Outputs:
   LambdaRoleARN:

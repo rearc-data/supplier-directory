@@ -5,6 +5,9 @@ import boto3
 import os
 from datetime import date
 
+import logging
+logger = logging.getLogger()
+
 os.environ['AWS_DATA_PATH'] = '/opt/'
 
 dataexchange = boto3.client(
@@ -141,4 +144,6 @@ def lambda_handler(event, context):
                 'body': json.dumps('Revision did not complete successfully')
             }
     else:
-        raise Exception('Something went wrong when uploading files to s3')
+        print ("WARNING Asset List Empty")
+        logger.warning("Asset List Empty, no changes detected")
+        # raise Exception('Something went wrong when uploading files to s3')
