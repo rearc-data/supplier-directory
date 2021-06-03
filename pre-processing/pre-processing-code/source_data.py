@@ -1,9 +1,11 @@
 import os
 import io
+import urllib
 from multiprocessing.dummy import Pool
 from urllib.error import URLError, HTTPError
 from urllib.request import urlopen
 import boto3
+import requests
 from rearc_data_utils.pre_processing import extract_helper as eh
 from rearc_data_utils.s3_helper import s3_md5_compare as s3md5
 import numpy as np
@@ -11,6 +13,7 @@ import json
 from boto3.s3.transfer import TransferConfig
 
 import logging
+
 logger = logging.getLogger()
 
 def upload_file(frmt_list):
@@ -71,7 +74,12 @@ def data_to_s3(frmt=None):
 
     # source_dataset_url = 'https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/ct36-nrcq'
 
-    source_dataset_url = "https://data.cms.gov/provider-data/sites/default/files/resources/598b68bde4da1561a570cb057a4176dd_1622563521/Medical-Equipment-Suppliers.csv"
+    response = requests.get('https://data.cms.gov/provider-data/api/1/metastore/schemas/dataset/items/ct36-nrcq')
+    content = response.content
+    fields = json.loads(content)
+    download_url = fields['distribution'][0]['downloadURL'].replace('\\','')
+    #source_dataset_url = "https://data.cms.gov/provider-data/sites/default/files/resources/598b68bde4da1561a570cb057a4176dd_1622563521/Medical-Equipment-Suppliers.csv"
+    source_dataset_url = 'https://data.cms.gov' + download_url
 
     logger.info("URL used: " + source_dataset_url)
 
