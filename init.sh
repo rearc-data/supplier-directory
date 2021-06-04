@@ -55,11 +55,12 @@ done
 
 echo "creating a pre-processing zip package, these commands may need to be adjusted depending on folder structure and dependencies"
 (cd pre-processing/pre-processing-code && \
-pip3 install requests xlrd numpy pytz pandas --platform manylinux1_x86_64 --no-deps --only-binary=:all: --python-version 37 --abi cp37m --target . && \
-pip3 install ../../../rearc-data-utils/dist/rearc_data_utils-0.0.1-py3-none-any.whl --platform manylinux1_x86_64 --no-deps --only-binary=:all: --python-version 37 --abi cp37m --target . && \
-#pip3 install xlrd numpy pytz pandas --no-deps --target . && \
-#pip3 install ../../../rearc-data-utils/dist/rearc_data_utils-0.0.1-py3-none-any.whl --platform manylinux1_x86_64 --no-deps --target . && \
-zip -r pre-processing-code.zip . -x "*.dist-info/*" -x "bin/*" -x "**/__pycache__/*" && rm -r ./*/)
+#TEST#pip3 install requests xlrd numpy pytz pandas --platform manylinux1_x86_64 --no-deps --only-binary=:all: --python-version 37 --abi cp37m --target . && \
+#TEST#pip3 install ../../../rearc-data-utils/dist/rearc_data_utils-0.0.1-py3-none-any.whl --platform manylinux1_x86_64 --no-deps --only-binary=:all: --python-version 37 --abi cp37m --target . && \
+#OLD#pip3 install xlrd numpy pytz pandas --no-deps --target . && \
+#OLD#pip3 install ../../../rearc-data-utils/dist/rearc_data_utils-0.0.1-py3-none-any.whl --platform manylinux1_x86_64 --no-deps --target . && \
+#TEST#zip -r pre-processing-code.zip . -x "*.dist-info/*" -x "bin/*" -x "**/__pycache__/*" && rm -r ./*/)
+zip -r pre-processing-code.zip . )
 #upload pre-preprocessing.zip to s3
 
 # exit 0
