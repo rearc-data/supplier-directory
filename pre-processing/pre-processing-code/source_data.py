@@ -14,6 +14,8 @@ from boto3.s3.transfer import TransferConfig
 
 import logging
 
+version = '0.1.0 06-08-2021 16:22'
+
 logger = logging.getLogger()
 
 def upload_file(frmt_list):
@@ -65,6 +67,30 @@ def upload_file(frmt_list):
     # if it is empty, lambda_handler will not republish
     return asset_list
 
+def zip9_to_zip5 (zip9):
+    if (isinstance(zip9, str)):
+        z = zip9
+    else:
+        if (isinstance(zip9, int)):
+            z = str(zip9)
+        else:
+            z = '000000000'
+
+    if len(z) == 9:
+        return z[:5]
+    elif len(z) == 8:
+        return '0' + z[:4]
+    elif len(z) == 7:
+        return '00' + z[:3]
+    elif len(z) == 5:
+        return z
+    elif len(z) == 4:
+        return '0' + z
+    elif len(z) == 3:
+        return '00' + z
+    else:
+        return z
+
 def data_to_s3(frmt=None):
     # throws error occured if there was a problem accessing data
     # otherwise downloads and uploads to s3
@@ -99,6 +125,10 @@ def data_to_s3(frmt=None):
     except URLError as e:
         raise Exception('URLError: ', e.reason, frmt)
 
+    # For debugging only:
+    #except Exception as ex:
+    #    raise ex
+
     else:
         df = eh.flatten_list(df,["supplieslist","specialitieslist","providertypelist"],"Product Category Name","|")
 
@@ -106,12 +136,10 @@ def data_to_s3(frmt=None):
             lambda x: np.where((len(x) >= 10) & set(list(x)).issubset(list('.0123456789')),
                                '(' + x[:3] + ')' + x[3:6] + '-' + x[6:10],
                                'Phone number not in record'))
-        df['zip_string'] = df['practicezip9code'].astype(str)
-        df['zip_string9'] = df['zip_string'] #.where(
-                                #df['zip_string'].str.len() != 9,
-                                #"0" + df['zip_string']
-                            #)
-        df['practicezip5code'] = df['zip_string9'] #.str[:5]
+        df['zip_string9'] = df['practicezip9code']
+        df['practicezip5code'] = df['practicezip9code'].apply(
+            lambda x: zip9_to_zip5(x)
+        )
 
         target =                                [
                                    #"Competitive Bid Service Area ID",
@@ -141,7 +169,7 @@ def data_to_s3(frmt=None):
                                    "practiceaddress2", #OK
                                    "practicecity", #OK
                                    "practicestate", #OK
-                                   "practicezip5code", #TODO make Zip 5
+                                   "practicezip5code", #OK
                                    "zip_string9", #OK
                                    "PhoneNumber", #telephonenumber", #OK
                                    #"telephonenumber", #toll free number not available, deleted
@@ -224,6 +252,8 @@ def data_to_s3(frmt=None):
 
 
 def source_dataset():
+    print('REARC INFO: SOURCE_DATA.PY Version: ' + version)
+    logger.info('REARC INFO: SOURCE_DATA.PY Version: ', version)
 
     # list of enpoints to be used to access data included with product
     data_endpoints = [

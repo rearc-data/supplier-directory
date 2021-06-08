@@ -21,8 +21,13 @@ by Medicare, please visit the [Medicare Data homepage](https://data.medicare.gov
 This resource is presented in both the JSON and CSV formats. The
 included dataset contains the following columns:
 
-`"cbsa_id", "cbsa_name", "company_name
-", "dba_name", "address", "address_2", "city","state", "zip", "zip_plus_4", "phone", "toll_free_telephone", "prod_ctgry_name", "competitive_bid" `
+`"company_name
+", "dba_name", "address", "address_2", "city","state", "zip", "zip_plus_4", "phone", "prod_ctgry_name", "competitive_bid" `
+
+#### Change Note 6/8/2021:
+As of May 2021, the following columns are no longer provided by CMS:
+
+`"cbsa_id", "cbsa_name","toll_free_telephone" `
 
 More Information
 ----------------
@@ -32,6 +37,9 @@ More Information
 -   [Terms of Use](https://www.usa.gov/government-works) 
 -   Frequency: Weekly
 -   Formats: CSV, JSON
+
+#### Change Note 6/8/2021:
+As of May 2021, the JSON format has changed and reflects a list of records. Metadata of source data tables is no longer included. The original format is not provided by CSM anymore
 
 Contact Details
 ---------------
