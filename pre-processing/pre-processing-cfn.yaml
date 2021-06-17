@@ -89,7 +89,7 @@ Resources:
             Fn::Sub: ${Region}
           SOURCE_URL:
             Fn::Sub: ${SourceURL}
-      Layers: ["arn:aws:lambda:us-east-1:796406704065:layer:rearc-data-utils:26"]
+      Layers: ["arn:aws:lambda:us-east-1:796406704065:layer:rearc-data-utils:31"]
 
   ScheduledRule:
     Type: AWS::Events::Rule
